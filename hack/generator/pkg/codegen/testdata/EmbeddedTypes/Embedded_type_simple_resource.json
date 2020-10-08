@@ -16,6 +16,9 @@
                 "name": {
                     "type": "string"
                 },
+                "location": {
+                    "type": "string"
+                },
                 "type": {
                     "type": "string",
                     "enum": [

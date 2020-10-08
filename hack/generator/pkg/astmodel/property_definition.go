@@ -172,7 +172,7 @@ func (property *PropertyDefinition) MakeRequired() *PropertyDefinition {
 	if property.hasOptionalType() {
 		// Need to remove the optionality
 		ot := property.propertyType.(*OptionalType)
-		result.propertyType = ot.BaseType()
+		result.propertyType = ot.Element()
 	}
 
 	result.isRequired = true

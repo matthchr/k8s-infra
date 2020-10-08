@@ -39,15 +39,15 @@ type KubernetesResource interface {
 	// Owner returns the ResourceReference of the owner, or nil if there is no owner
 	Owner() *ResourceReference
 
-	// TODO: I think we need this?
-	// KnownOwner() *KnownResourceReference
-
 	// AzureName returns the Azure name of the resource
 	AzureName() string
 
 	// Some types, but not all, have a corresponding:
 	// 	SetAzureName(name string)
 	// They do not if the name must be a fixed value (like 'default').
+
+	// Location returns the location (region) of the resource
+	Location() string
 
 	// TODO: GetAPIVersion here?
 

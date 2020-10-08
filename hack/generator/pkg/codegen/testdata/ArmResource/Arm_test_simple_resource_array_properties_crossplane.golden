@@ -47,6 +47,7 @@ type FakeResourceParameters struct {
 	ArrayOfArrays [][]Foo          `json:"arrayOfArrays,omitempty"`
 	ArrayOfEnums  []Color          `json:"arrayOfEnums,omitempty"`
 	ArrayOfMaps   []map[string]Foo `json:"arrayOfMaps,omitempty"`
+	Location      *string          `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`

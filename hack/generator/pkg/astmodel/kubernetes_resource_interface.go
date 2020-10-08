@@ -10,9 +10,10 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/Azure/k8s-infra/hack/generator/pkg/astbuilder"
 	"github.com/dave/dst"
 	"github.com/pkg/errors"
+
+	"github.com/Azure/k8s-infra/hack/generator/pkg/astbuilder"
 )
 
 // These are some magical field names which we're going to use or generate
@@ -20,6 +21,7 @@ const (
 	AzureNameProperty = "AzureName"
 	SetAzureNameFunc  = "SetAzureName"
 	OwnerProperty     = "Owner"
+	LocationProperty  = "Location"
 )
 
 // AddKubernetesResourceInterfaceImpls adds the required interfaces for
@@ -144,6 +146,12 @@ func generateDefaulter(resourceName TypeName, spec *ObjectType, idFactory Identi
 			o:         spec,
 			idFactory: idFactory,
 			asFunc:    defaultAzureNameFunction,
+		},
+		&objectFunction{
+			name:      LocationProperty,
+			o:         spec,
+			idFactory: idFactory,
+			asFunc:    locationFunction,
 		}).WithAnnotation(annotation)
 }
 
@@ -610,5 +618,107 @@ func getStringAzureNameFunction(k *objectFunction, codeGenerationContext *CodeGe
 
 	fn.AddComments("returns the Azure name of the resource")
 	fn.AddReturns("string")
+	return fn.DefineFunc()
+}
+
+// TODO: Drop enum handling
+// TODO: Fix panic messages to say the type that has the error
+func buildLocationReturn(t Type, propertySelector *dst.SelectorExpr, codeGenerationContext *CodeGenerationContext) (bool, dst.Expr) {
+	// 4 supported options: Optional (enum | string), Required (enum | string)
+
+	assertTypeNameReferencesEnum := func(typeName TypeName) {
+		def, err := codeGenerationContext.GetImportedDefinition(typeName)
+		if err != nil {
+			panic(err)
+		}
+
+		if _, ok := def.Type().(*EnumType); !ok {
+			panic(fmt.Sprintf("unsupported %s property type: %s is not an enum", LocationProperty, typeName))
+		}
+	}
+
+	if op, ok := t.(*OptionalType); ok {
+		innerType := op.Element()
+		if innerType.Equals(StringType) {
+			return true, astbuilder.ValueOf(propertySelector)
+		} else if typeName, ok := innerType.(TypeName); ok {
+			assertTypeNameReferencesEnum(typeName)
+
+			return true, &dst.CallExpr{
+				Fun: dst.NewIdent("string"),
+				Args: []dst.Expr{
+					astbuilder.ValueOf(propertySelector),
+				},
+			}
+		} else {
+			panic(fmt.Sprintf("unsupported %s property type %s", LocationProperty, innerType))
+		}
+	}
+
+	if t.Equals(StringType) {
+		return false, propertySelector
+	} else if typeName, ok := t.(TypeName); ok {
+		assertTypeNameReferencesEnum(typeName)
+
+		return false, &dst.CallExpr{
+			Fun: dst.NewIdent("string"),
+			Args: []dst.Expr{
+				propertySelector,
+			},
+		}
+	}
+
+	panic(fmt.Sprintf("unsupported %s property type %s", LocationProperty, t))
+}
+
+func locationFunction(k *objectFunction, codeGenerationContext *CodeGenerationContext, receiver TypeName, methodName string) *dst.FuncDecl {
+	receiverIdent := k.idFactory.CreateIdentifier(receiver.Name(), NotExported)
+	receiverType := receiver.AsType(codeGenerationContext)
+
+	specSelector := &dst.SelectorExpr{
+		X:   dst.NewIdent(receiverIdent),
+		Sel: dst.NewIdent("Spec"),
+	}
+
+	prop, ok := k.o.Property(LocationProperty)
+	if !ok {
+		panic(fmt.Sprintf("%s is missing expected %s property", receiver, LocationProperty))
+	}
+
+	propertySelector := &dst.SelectorExpr{
+		X:   specSelector,
+		Sel: dst.NewIdent(LocationProperty),
+	}
+
+	var body []dst.Stmt
+	optional, retStmt := buildLocationReturn(prop.PropertyType(), propertySelector, codeGenerationContext)
+	if optional {
+		body = append(
+			body,
+			astbuilder.ReturnIfNil(
+				propertySelector,
+				astbuilder.EmptyStringLiteral()))
+	}
+	body = append(body, &dst.ReturnStmt{
+		Results: []dst.Expr{
+			retStmt,
+		},
+	})
+
+	fn := astbuilder.FuncDetails{
+		Name:          methodName,
+		ReceiverIdent: receiverIdent,
+		ReceiverType: &dst.StarExpr{
+			X: receiverType,
+		},
+		Params:  nil,
+		Returns: []*dst.Field{
+			{
+				Type: dst.NewIdent("string"),
+			},
+		},
+		Body: body,
+	}
+	fn.AddComments("returns the location (region) of the resource")
 	return fn.DefineFunc()
 }

@@ -33,6 +33,14 @@ func (fakeResource *FakeResource) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (fakeResource *FakeResource) Location() string {
+	if fakeResource.Spec.Location == nil {
+		return ""
+	}
+	return *fakeResource.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &FakeResource{}
 
 // AzureName returns the Azure name of the resource
@@ -56,6 +64,7 @@ type FakeResourceList struct {
 
 type FakeResource_SpecARM struct {
 	ApiVersion   FakeResourceSpecApiVersion   `json:"apiVersion"`
+	Location     *string                      `json:"location,omitempty"`
 	MapFoo       map[string]FooARM            `json:"mapFoo"`
 	MapOfArrays  map[string][]FooARM          `json:"mapOfArrays,omitempty"`
 	MapOfEnums   map[string]Color             `json:"mapOfEnums,omitempty"`
@@ -105,7 +114,8 @@ const FakeResourceSpecTypeMicrosoftAzureFakeResource = FakeResourceSpecType("Mic
 type FakeResource_Spec struct {
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
-	AzureName string `json:"azureName"`
+	AzureName string  `json:"azureName"`
+	Location  *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	MapFoo       map[string]Foo            `json:"mapFoo"`
@@ -127,6 +137,10 @@ func (fakeResourceSpec *FakeResource_Spec) ConvertToARM(name string, resolvedRef
 	}
 	var result FakeResource_SpecARM
 	result.ApiVersion = FakeResourceSpecApiVersion20200601
+	if fakeResourceSpec.Location != nil {
+		location := *fakeResourceSpec.Location
+		result.Location = &location
+	}
 	if fakeResourceSpec.MapFoo != nil {
 		result.MapFoo = make(map[string]FooARM)
 		for key, value := range fakeResourceSpec.MapFoo {
@@ -196,6 +210,10 @@ func (fakeResourceSpec *FakeResource_Spec) PopulateFromARM(owner genruntime.Know
 		return fmt.Errorf("unexpected type supplied for PopulateFromARM() function. Expected FakeResource_SpecARM, got %T", armInput)
 	}
 	fakeResourceSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		fakeResourceSpec.Location = &location
+	}
 	if typedInput.MapFoo != nil {
 		fakeResourceSpec.MapFoo = make(map[string]Foo)
 		for key, value := range typedInput.MapFoo {

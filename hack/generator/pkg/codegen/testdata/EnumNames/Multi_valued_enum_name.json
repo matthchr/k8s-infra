@@ -21,6 +21,9 @@
                         "three"
                     ]
                 },
+                "location": {
+                    "type": "string"
+                },
                 "type": {
                     "type": "string",
                     "enum": [

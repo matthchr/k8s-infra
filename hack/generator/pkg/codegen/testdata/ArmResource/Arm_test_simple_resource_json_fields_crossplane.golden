@@ -45,6 +45,7 @@ type FakeResourceParameters struct {
 
 	// +kubebuilder:validation:Required
 	JsonObject map[string]v1.JSON `json:"jsonObject"`
+	Location   *string            `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	MandatoryJson v1.JSON `json:"mandatoryJson"`

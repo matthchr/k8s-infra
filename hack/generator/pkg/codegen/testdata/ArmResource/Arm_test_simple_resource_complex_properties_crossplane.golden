@@ -44,7 +44,8 @@ type FakeResourceParameters struct {
 	Color      *FakeResourceSpecColor     `json:"color,omitempty"`
 
 	// +kubebuilder:validation:Required
-	Foo Foo `json:"foo"`
+	Foo      Foo     `json:"foo"`
+	Location *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`

@@ -392,3 +392,18 @@ func cloneStmtSlice(stmts []dst.Stmt) []dst.Stmt {
 
 	return result
 }
+
+// ValueOf returns a statement that gets the value of the provided pointer expression.
+//	*<expr>
+func ValueOf(exp dst.Expr) *dst.StarExpr {
+	return &dst.StarExpr{
+		X: exp,
+	}
+}
+
+func EmptyStringLiteral() *dst.BasicLit {
+	return &dst.BasicLit{
+		Kind:  token.STRING,
+		Value: "\"\"",
+	}
+}

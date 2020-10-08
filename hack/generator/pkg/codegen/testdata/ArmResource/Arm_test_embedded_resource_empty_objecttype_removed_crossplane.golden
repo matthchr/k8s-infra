@@ -67,6 +67,7 @@ type B_Spec struct {
 type AParameters struct {
 	// +kubebuilder:validation:Required
 	ApiVersion ASpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`
@@ -82,6 +83,7 @@ type AParameters struct {
 type BParameters struct {
 	// +kubebuilder:validation:Required
 	ApiVersion BSpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`

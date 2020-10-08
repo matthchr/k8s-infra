@@ -93,6 +93,7 @@ type C_Spec struct {
 type AParameters struct {
 	// +kubebuilder:validation:Required
 	ApiVersion ASpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`
@@ -111,6 +112,7 @@ type BParameters struct {
 
 	// +kubebuilder:validation:Required
 	ApiVersion BSpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`
@@ -132,6 +134,7 @@ type CParameters struct {
 	BName         string              `json:"bName"`
 	BNameRef      *v1alpha1.Reference `json:"bNameRef,omitempty"`
 	BNameSelector *v1alpha1.Selector  `json:"bNameSelector,omitempty"`
+	Location      *string             `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Name                      string              `json:"name"`

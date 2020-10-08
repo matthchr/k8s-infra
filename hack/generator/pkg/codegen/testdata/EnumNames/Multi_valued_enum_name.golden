@@ -33,6 +33,14 @@ func (aResource *AResource) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (aResource *AResource) Location() string {
+	if aResource.Spec.Location == nil {
+		return ""
+	}
+	return *aResource.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &AResource{}
 
 // AzureName returns the Azure name of the resource (string representation of github.com/Azure/k8s-infra/testing/test/v1alpha1api20200101/AResourceSpecName)
@@ -56,6 +64,7 @@ type AResourceList struct {
 
 type AResource_SpecARM struct {
 	ApiVersion AResourceSpecApiVersion `json:"apiVersion"`
+	Location   *string                 `json:"location,omitempty"`
 	Name       string                  `json:"name"`
 	Type       AResourceSpecType       `json:"type"`
 }
@@ -91,6 +100,7 @@ type AResource_Spec struct {
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
 	AzureName AResourceSpecName `json:"azureName"`
+	Location  *string           `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"microsoft.resources.infra.azure.com" json:"owner" kind:"ResourceGroup"`
@@ -105,6 +115,10 @@ func (aResourceSpec *AResource_Spec) ConvertToARM(name string, resolvedReference
 	}
 	var result AResource_SpecARM
 	result.ApiVersion = AResourceSpecApiVersion20200601
+	if aResourceSpec.Location != nil {
+		location := *aResourceSpec.Location
+		result.Location = &location
+	}
 	result.Name = name
 	result.Type = AResourceSpecTypeMicrosoftAzureAResource
 	return result, nil
@@ -122,6 +136,10 @@ func (aResourceSpec *AResource_Spec) PopulateFromARM(owner genruntime.KnownResou
 		return fmt.Errorf("unexpected type supplied for PopulateFromARM() function. Expected AResource_SpecARM, got %T", armInput)
 	}
 	aResourceSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		aResourceSpec.Location = &location
+	}
 	aResourceSpec.Owner = owner
 	return nil
 }

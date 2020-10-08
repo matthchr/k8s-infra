@@ -22,6 +22,9 @@
                         "Microsoft.Azure/FakeResource"
                     ]
                 },
+                "location": {
+                    "type": "string"
+                },
                 "apiVersion": {
                     "type": "string",
                     "enum": [

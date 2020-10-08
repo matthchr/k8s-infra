@@ -33,6 +33,14 @@ func (a *A) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (a *A) Location() string {
+	if a.Spec.Location == nil {
+		return ""
+	}
+	return *a.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &A{}
 
 // AzureName returns the Azure name of the resource
@@ -56,6 +64,7 @@ type AList struct {
 
 type A_SpecARM struct {
 	ApiVersion ASpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 	Name       string          `json:"name"`
 	Type       ASpecType       `json:"type"`
 }
@@ -100,6 +109,14 @@ func (b *B) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (b *B) Location() string {
+	if b.Spec.Location == nil {
+		return ""
+	}
+	return *b.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &B{}
 
 // AzureName returns the Azure name of the resource
@@ -123,6 +140,7 @@ type BList struct {
 
 type B_SpecARM struct {
 	ApiVersion BSpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 	Name       string          `json:"name"`
 	Type       BSpecType       `json:"type"`
 }
@@ -167,6 +185,14 @@ func (c *C) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (c *C) Location() string {
+	if c.Spec.Location == nil {
+		return ""
+	}
+	return *c.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &C{}
 
 // AzureName returns the Azure name of the resource
@@ -190,6 +216,7 @@ type CList struct {
 
 type C_SpecARM struct {
 	ApiVersion CSpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 	Name       string          `json:"name"`
 	Type       CSpecType       `json:"type"`
 }
@@ -234,6 +261,14 @@ func (d *D) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (d *D) Location() string {
+	if d.Spec.Location == nil {
+		return ""
+	}
+	return *d.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &D{}
 
 // AzureName returns the Azure name of the resource
@@ -257,6 +292,7 @@ type DList struct {
 
 type D_SpecARM struct {
 	ApiVersion DSpecApiVersion `json:"apiVersion"`
+	Location   *string         `json:"location,omitempty"`
 	Name       string          `json:"name"`
 	Type       DSpecType       `json:"type"`
 }
@@ -291,7 +327,8 @@ const ASpecTypeMicrosoftAzureA = ASpecType("Microsoft.Azure/A")
 type A_Spec struct {
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
-	AzureName string `json:"azureName"`
+	AzureName string  `json:"azureName"`
+	Location  *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"microsoft.resources.infra.azure.com" json:"owner" kind:"ResourceGroup"`
@@ -306,6 +343,10 @@ func (aSpec *A_Spec) ConvertToARM(name string, resolvedReferences genruntime.Res
 	}
 	var result A_SpecARM
 	result.ApiVersion = ASpecApiVersion20200601
+	if aSpec.Location != nil {
+		location := *aSpec.Location
+		result.Location = &location
+	}
 	result.Name = name
 	result.Type = ASpecTypeMicrosoftAzureA
 	return result, nil
@@ -323,6 +364,10 @@ func (aSpec *A_Spec) PopulateFromARM(owner genruntime.KnownResourceReference, ar
 		return fmt.Errorf("unexpected type supplied for PopulateFromARM() function. Expected A_SpecARM, got %T", armInput)
 	}
 	aSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		aSpec.Location = &location
+	}
 	aSpec.Owner = owner
 	return nil
 }
@@ -343,7 +388,8 @@ const BSpecTypeMicrosoftAzureB = BSpecType("Microsoft.Azure/B")
 type B_Spec struct {
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
-	AzureName string `json:"azureName"`
+	AzureName string  `json:"azureName"`
+	Location  *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"test.infra.azure.com" json:"owner" kind:"A"`
@@ -358,6 +404,10 @@ func (bSpec *B_Spec) ConvertToARM(name string, resolvedReferences genruntime.Res
 	}
 	var result B_SpecARM
 	result.ApiVersion = BSpecApiVersion20200601
+	if bSpec.Location != nil {
+		location := *bSpec.Location
+		result.Location = &location
+	}
 	result.Name = name
 	result.Type = BSpecTypeMicrosoftAzureB
 	return result, nil
@@ -375,6 +425,10 @@ func (bSpec *B_Spec) PopulateFromARM(owner genruntime.KnownResourceReference, ar
 		return fmt.Errorf("unexpected type supplied for PopulateFromARM() function. Expected B_SpecARM, got %T", armInput)
 	}
 	bSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		bSpec.Location = &location
+	}
 	bSpec.Owner = owner
 	return nil
 }
@@ -395,7 +449,8 @@ const CSpecTypeMicrosoftAzureC = CSpecType("Microsoft.Azure/C")
 type C_Spec struct {
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
-	AzureName string `json:"azureName"`
+	AzureName string  `json:"azureName"`
+	Location  *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"test.infra.azure.com" json:"owner" kind:"B"`
@@ -410,6 +465,10 @@ func (cSpec *C_Spec) ConvertToARM(name string, resolvedReferences genruntime.Res
 	}
 	var result C_SpecARM
 	result.ApiVersion = CSpecApiVersion20200601
+	if cSpec.Location != nil {
+		location := *cSpec.Location
+		result.Location = &location
+	}
 	result.Name = name
 	result.Type = CSpecTypeMicrosoftAzureC
 	return result, nil
@@ -427,6 +486,10 @@ func (cSpec *C_Spec) PopulateFromARM(owner genruntime.KnownResourceReference, ar
 		return fmt.Errorf("unexpected type supplied for PopulateFromARM() function. Expected C_SpecARM, got %T", armInput)
 	}
 	cSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		cSpec.Location = &location
+	}
 	cSpec.Owner = owner
 	return nil
 }
@@ -447,7 +510,8 @@ const DSpecTypeMicrosoftAzureD = DSpecType("Microsoft.Azure/D")
 type D_Spec struct {
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
-	AzureName string `json:"azureName"`
+	AzureName string  `json:"azureName"`
+	Location  *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"test.infra.azure.com" json:"owner" kind:"B"`
@@ -462,6 +526,10 @@ func (dSpec *D_Spec) ConvertToARM(name string, resolvedReferences genruntime.Res
 	}
 	var result D_SpecARM
 	result.ApiVersion = DSpecApiVersion20200601
+	if dSpec.Location != nil {
+		location := *dSpec.Location
+		result.Location = &location
+	}
 	result.Name = name
 	result.Type = DSpecTypeMicrosoftAzureD
 	return result, nil
@@ -479,6 +547,10 @@ func (dSpec *D_Spec) PopulateFromARM(owner genruntime.KnownResourceReference, ar
 		return fmt.Errorf("unexpected type supplied for PopulateFromARM() function. Expected D_SpecARM, got %T", armInput)
 	}
 	dSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		dSpec.Location = &location
+	}
 	dSpec.Owner = owner
 	return nil
 }

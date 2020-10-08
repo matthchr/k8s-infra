@@ -155,6 +155,13 @@ typeTransformers:
           name: string
     because: Tags is defined as map[string]interface{} when it should be map[string]string
 
+  - group: deploymenttemplate
+#    version: *
+    name: ResourceLocations
+    target:
+      name: string
+    because: Modeling this as an enum doesn't work well in the context of CRDs because new regions are regularly added
+
   # Removing map[string]interfaces{} that happen because the type has
   # only readonly properties that have all been removed in the swagger
   # -> deployment template conversion.

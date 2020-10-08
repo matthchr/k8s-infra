@@ -37,6 +37,14 @@ func (fakeResource *FakeResource) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (fakeResource *FakeResource) Location() string {
+	if fakeResource.Spec.Location == nil {
+		return ""
+	}
+	return *fakeResource.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &FakeResource{}
 
 // AzureName returns the Azure name of the resource
@@ -63,6 +71,7 @@ type FakeResource_SpecARM struct {
 	ApiVersion       FakeResourceSpecApiVersion `json:"apiVersion"`
 	Color            *FakeResourceSpecColor     `json:"color,omitempty"`
 	Foo              FooARM                     `json:"foo"`
+	Location         *string                    `json:"location,omitempty"`
 	Name             string                     `json:"name"`
 	OptionalFoo      *FooARM                    `json:"optionalFoo,omitempty"`
 	Type             FakeResourceSpecType       `json:"type"`
@@ -144,8 +153,9 @@ type FakeResource_Spec struct {
 	Color     *FakeResourceSpecColor `json:"color,omitempty"`
 
 	// +kubebuilder:validation:Required
-	Foo         Foo  `json:"foo"`
-	OptionalFoo *Foo `json:"optionalFoo,omitempty"`
+	Foo         Foo     `json:"foo"`
+	Location    *string `json:"location,omitempty"`
+	OptionalFoo *Foo    `json:"optionalFoo,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"microsoft.resources.infra.azure.com" json:"owner" kind:"ResourceGroup"`
@@ -169,6 +179,10 @@ func (fakeResourceSpec *FakeResource_Spec) ConvertToARM(name string, resolvedRef
 		return nil, err
 	}
 	result.Foo = fooARM.(FooARM)
+	if fakeResourceSpec.Location != nil {
+		location := *fakeResourceSpec.Location
+		result.Location = &location
+	}
 	result.Name = name
 	if fakeResourceSpec.OptionalFoo != nil {
 		optionalFooARM, err := (*fakeResourceSpec.OptionalFoo).ConvertToARM(name, resolvedReferences)
@@ -204,6 +218,10 @@ func (fakeResourceSpec *FakeResource_Spec) PopulateFromARM(owner genruntime.Know
 		return err
 	}
 	fakeResourceSpec.Foo = foo
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		fakeResourceSpec.Location = &location
+	}
 	if typedInput.OptionalFoo != nil {
 		var optionalFoo1 Foo
 		err = optionalFoo1.PopulateFromARM(owner, *typedInput.OptionalFoo)

@@ -33,6 +33,14 @@ func (fakeResource *FakeResource) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (fakeResource *FakeResource) Location() string {
+	if fakeResource.Spec.Location == nil {
+		return ""
+	}
+	return *fakeResource.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &FakeResource{}
 
 // AzureName returns the Azure name of the resource
@@ -60,6 +68,7 @@ type FakeResource_SpecARM struct {
 	ArrayOfArrays [][]FooARM                 `json:"arrayOfArrays,omitempty"`
 	ArrayOfEnums  []Color                    `json:"arrayOfEnums,omitempty"`
 	ArrayOfMaps   []map[string]FooARM        `json:"arrayOfMaps,omitempty"`
+	Location      *string                    `json:"location,omitempty"`
 	Name          string                     `json:"name"`
 	Type          FakeResourceSpecType       `json:"type"`
 }
@@ -110,7 +119,8 @@ type FakeResource_Spec struct {
 
 	//AzureName: The name of the resource in Azure. This is often the same as the name
 	//of the resource in Kubernetes but it doesn't have to be.
-	AzureName string `json:"azureName"`
+	AzureName string  `json:"azureName"`
+	Location  *string `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	Owner genruntime.KnownResourceReference `group:"microsoft.resources.infra.azure.com" json:"owner" kind:"ResourceGroup"`
@@ -158,6 +168,10 @@ func (fakeResourceSpec *FakeResource_Spec) ConvertToARM(name string, resolvedRef
 			}
 			result.ArrayOfMaps = append(result.ArrayOfMaps, itemTemp)
 		}
+	}
+	if fakeResourceSpec.Location != nil {
+		location := *fakeResourceSpec.Location
+		result.Location = &location
 	}
 	result.Name = name
 	result.Type = FakeResourceSpecTypeMicrosoftAzureFakeResource
@@ -213,6 +227,10 @@ func (fakeResourceSpec *FakeResource_Spec) PopulateFromARM(owner genruntime.Know
 		}
 	}
 	fakeResourceSpec.SetAzureName(genruntime.ExtractKubernetesResourceNameFromARMName(typedInput.Name))
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		fakeResourceSpec.Location = &location
+	}
 	fakeResourceSpec.Owner = owner
 	return nil
 }

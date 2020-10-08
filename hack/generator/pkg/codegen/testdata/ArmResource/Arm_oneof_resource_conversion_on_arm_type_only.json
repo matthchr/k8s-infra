@@ -16,6 +16,9 @@
                 "name": {
                     "type": "string"
                 },
+                "location": {
+                    "type": "string"
+                },
                 "properties": {
                     "$ref": "#/definitions/Properties"
                 },

@@ -34,6 +34,14 @@ func (fakeResource *FakeResource) Default() {
 	}
 }
 
+// Location returns the location (region) of the resource
+func (fakeResource *FakeResource) Location() string {
+	if fakeResource.Spec.Location == nil {
+		return ""
+	}
+	return *fakeResource.Spec.Location
+}
+
 var _ genruntime.KubernetesResource = &FakeResource{}
 
 // AzureName returns the Azure name of the resource
@@ -58,6 +66,7 @@ type FakeResourceList struct {
 type FakeResource_SpecARM struct {
 	ApiVersion    FakeResourceSpecApiVersion `json:"apiVersion"`
 	JsonObject    map[string]v1.JSON         `json:"jsonObject"`
+	Location      *string                    `json:"location,omitempty"`
 	MandatoryJson v1.JSON                    `json:"mandatoryJson"`
 	Name          string                     `json:"name"`
 	OptionalJson  *v1.JSON                   `json:"optionalJson,omitempty"`
@@ -98,6 +107,7 @@ type FakeResource_Spec struct {
 
 	// +kubebuilder:validation:Required
 	JsonObject map[string]v1.JSON `json:"jsonObject"`
+	Location   *string            `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	MandatoryJson v1.JSON  `json:"mandatoryJson"`
@@ -121,6 +131,10 @@ func (fakeResourceSpec *FakeResource_Spec) ConvertToARM(name string, resolvedRef
 		for key, value := range fakeResourceSpec.JsonObject {
 			result.JsonObject[key] = *value.DeepCopy()
 		}
+	}
+	if fakeResourceSpec.Location != nil {
+		location := *fakeResourceSpec.Location
+		result.Location = &location
 	}
 	result.MandatoryJson = *fakeResourceSpec.MandatoryJson.DeepCopy()
 	result.Name = name
@@ -149,6 +163,10 @@ func (fakeResourceSpec *FakeResource_Spec) PopulateFromARM(owner genruntime.Know
 		for key, value := range typedInput.JsonObject {
 			fakeResourceSpec.JsonObject[key] = *value.DeepCopy()
 		}
+	}
+	if typedInput.Location != nil {
+		location := *typedInput.Location
+		fakeResourceSpec.Location = &location
 	}
 	fakeResourceSpec.MandatoryJson = *typedInput.MandatoryJson.DeepCopy()
 	if typedInput.OptionalJson != nil {

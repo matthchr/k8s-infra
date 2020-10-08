@@ -41,6 +41,7 @@ type FakeResource_Spec struct {
 type FakeResourceParameters struct {
 	// +kubebuilder:validation:Required
 	ApiVersion FakeResourceSpecApiVersion `json:"apiVersion"`
+	Location   *string                    `json:"location,omitempty"`
 
 	// +kubebuilder:validation:Required
 	MapFoo       map[string]Foo            `json:"mapFoo"`

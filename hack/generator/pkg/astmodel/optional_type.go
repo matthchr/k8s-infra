@@ -97,11 +97,6 @@ func (optional *OptionalType) Equals(t Type) bool {
 	return false
 }
 
-// BaseType returns the underlying type
-func (optional *OptionalType) BaseType() Type {
-	return optional.element
-}
-
 // String implements fmt.Stringer
 func (optional *OptionalType) String() string {
 	return fmt.Sprintf("(optional: %s)", optional.element.String())

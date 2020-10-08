@@ -19,6 +19,9 @@
                         "onlyonevalue"
                     ]
                 },
+                "location": {
+                    "type": "string"
+                },
                 "type": {
                     "type": "string",
                     "enum": [
