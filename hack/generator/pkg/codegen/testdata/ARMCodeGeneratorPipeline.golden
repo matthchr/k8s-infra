@@ -28,6 +28,7 @@ addCrossplaneEmbeddedResourceStatus crossplane Adds an embedded runtimev1alpha1.
 createStorage                       azure      Create storage versions of CRD types
 simplifyDefinitions                            Flatten definitions by removing wrapper types
 jsonTestCases                       azure      Add test cases to verify JSON serialization
+fixOptionalAliasReferences                     Fixes optional alias references to ensure that they are not optional if the reference is to an array or map
 markStorageVersion                             Marking the latest version of each resource as the storage version
 rogueCheck                                     Catch rogue definitions using AnyTypes
 ensureArmTypeExistsForEveryType     azure      Ensure that an ARM type for every top level resource spec/status exists

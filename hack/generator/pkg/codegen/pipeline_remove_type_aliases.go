@@ -9,11 +9,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/klog/v2"
 
 	"github.com/Azure/k8s-infra/hack/generator/pkg/astmodel"
-	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
 )
 
 // removeTypeAliases creates a pipeline stage removing type aliases

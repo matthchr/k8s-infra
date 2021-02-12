@@ -18,6 +18,7 @@ replaceAnyTypeWithJSON                         Replacing interface{}s with arbit
 applyKubernetesResourceInterface    azure      Ensures that every resource implements the KubernetesResource interface
 simplifyDefinitions                            Flatten definitions by removing wrapper types
 jsonTestCases                       azure      Add test cases to verify JSON serialization
+fixOptionalAliasReferences                     Fixes optional alias references to ensure that they are not optional if the reference is to an array or map
 markStorageVersion                             Marking the latest version of each resource as the storage version
 ensureArmTypeExistsForEveryType     azure      Ensure that an ARM type for every top level resource spec/status exists
 exportTestPackages                             Export packages for test
