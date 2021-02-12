@@ -1,0 +1,60 @@
+{
+    "$comment": "Test that a simple ARM resource with some array properties is rendered property",
+    "id": "https://test.test/schemas/2020-01-01/test.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Test",
+    "type": "object",
+    "properties": {
+        "test": {
+            "$ref": "#/resourceDefinitions/FakeResource"
+        }
+    },
+    "resourceDefinitions": {
+        "FakeResource": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "Microsoft.Azure/FakeResource"
+                    ]
+                },
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "2020-06-01"
+                    ]
+                },
+                "properties": {
+                    "type": "object",
+                    "properties": {
+                        "arrayAlias": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "connectionString": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "description": "Microsoft.Web/sites/config: connection string"
+                                    }
+                                }
+                            },
+                            "uniqueItems": true
+                        }
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "type",
+                "apiVersion",
+                "properties"
+            ]
+        }
+    },
+    "definitions": { }
+}

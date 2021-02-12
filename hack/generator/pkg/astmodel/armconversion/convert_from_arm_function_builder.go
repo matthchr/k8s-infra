@@ -200,6 +200,21 @@ func (builder *convertFromARMBuilder) propertiesWithSameNameHandler(
 		return nil
 	}
 
+	// Sanity check that the source and destination types really exist and are accessible
+	if toTypeName, ok := astmodel.AsTypeName(toProp.PropertyType()); ok {
+		_, err := builder.codeGenerationContext.GetImportedDefinition(toTypeName)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if fromTypeName, ok := astmodel.AsTypeName(fromProp.PropertyType()); ok {
+		_, err := builder.codeGenerationContext.GetImportedDefinition(fromTypeName)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	return builder.typeConversionBuilder.BuildConversion(
 		astmodel.ConversionParameters{
 			Source:            astbuilder.Selector(dst.NewIdent(builder.typedInputIdent), string(fromProp.PropertyName())),

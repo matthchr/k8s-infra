@@ -143,6 +143,68 @@ func removeValidations(t *astmodel.ObjectType) (*astmodel.ObjectType, error) {
 	return t, nil
 }
 
+// TODO: This is basically the same as the remove type aliases thing - combine them somehow
+func resolveTypeName2(visitor *astmodel.TypeVisitor, name astmodel.TypeName, types astmodel.Types) (astmodel.Type, error) {
+	def, ok := types[name]
+	if !ok {
+		return nil, errors.Errorf("couldn't find type for type name %s", name)
+	}
+
+	// If this typeName definition has a type of object, enum, validated, flagged, resource, or resourceList
+	// it's okay. Everything else we want to pull up one level to remove the alias
+	switch concreteType := def.Type().(type) {
+	case *astmodel.ObjectType:
+		return def.Name(), nil // standard object type - keep it
+	case *astmodel.EnumType:
+		return def.Name(), nil
+	case *astmodel.ResourceType:
+		return def.Name(), nil // must remain named for controller-gen
+	case *astmodel.ValidatedType:
+		return def.Name(), nil // TODO: This is wrong
+	case *astmodel.FlaggedType:
+		return def.Name(), nil // TODO: This is wrong
+	case astmodel.TypeName:
+		// We need to resolve further because this type is an alias
+		// klog.V(3).Infof("Found type alias %s, replacing it with %s", name, concreteType)
+		return resolveTypeName(visitor, concreteType, types)
+	case *astmodel.PrimitiveType:
+		return visitor.Visit(concreteType, nil)
+	case *astmodel.OptionalType:
+		return visitor.Visit(concreteType, nil)
+	case *astmodel.ArrayType:
+		return visitor.Visit(concreteType, nil)
+	case *astmodel.MapType:
+		return visitor.Visit(concreteType, nil)
+	default:
+		return nil, errors.Errorf("don't know how to resolve type %T for typeName %s", concreteType, name)
+	}
+}
+
+// TODO: naming
+func processType(definitions astmodel.Types, t astmodel.Type) (astmodel.Type, error) {
+	visitor := astmodel.TypeVisitorBuilder{
+		VisitTypeName: func(this *astmodel.TypeVisitor, it astmodel.TypeName, ctx interface{}) (astmodel.Type, error) {
+			return resolveTypeName2(this, it, definitions)
+		},
+	}.Build()
+
+	return visitor.Visit(t, nil)
+}
+
+func (c *armTypeCreator) removeAliases(t *astmodel.ObjectType) (*astmodel.ObjectType, error) {
+	for _, p := range t.Properties() {
+
+		newType, err := processType(c.definitions, p.PropertyType())
+		if err != nil {
+			return nil, err
+		}
+		p = p.WithType(newType)
+		t = t.WithProperty(p)
+	}
+
+	return t, nil
+}
+
 func (c *armTypeCreator) createARMTypeDefinition(isSpecType bool, def astmodel.TypeDefinition) (astmodel.TypeDefinition, error) {
 	convertPropertiesToARMTypesWrapper := func(t *astmodel.ObjectType) (*astmodel.ObjectType, error) {
 		return c.convertPropertiesToARMTypes(t, isSpecType)
@@ -157,8 +219,17 @@ func (c *armTypeCreator) createARMTypeDefinition(isSpecType bool, def astmodel.T
 		return t, nil
 	}
 
+	removeAliasesWrapper := func(t *astmodel.ObjectType) (*astmodel.ObjectType, error) {
+		return c.removeAliases(t)
+	}
+
 	armName := astmodel.CreateARMTypeName(def.Name())
-	armDef, err := def.WithName(armName).ApplyObjectTransformations(removeValidations, convertPropertiesToARMTypesWrapper, addOneOfConversionFunctionIfNeeded)
+	armDef, err := def.WithName(armName).ApplyObjectTransformations(
+		removeValidations,
+		removeAliasesWrapper,
+		convertPropertiesToARMTypesWrapper,
+		addOneOfConversionFunctionIfNeeded)
+
 	if err != nil {
 		return astmodel.TypeDefinition{},
 			errors.Wrapf(err, "creating ARM prototype %v from Kubernetes definition %v", armName, def.Name())
@@ -185,7 +256,7 @@ func (c *armTypeCreator) convertARMPropertyTypeIfNeeded(t astmodel.Type) (astmod
 
 		def, ok := c.definitions[it]
 		if !ok {
-			return nil, errors.Errorf("Failed to lookup %v", it)
+			return nil, errors.Errorf("failed to lookup %v", it)
 		}
 
 		if _, ok := def.Type().(*astmodel.ObjectType); ok {

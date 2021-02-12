@@ -42,7 +42,7 @@ func (p *PackageDefinition) GetDefinition(typeName TypeName) (TypeDefinition, er
 		}
 	}
 
-	return TypeDefinition{}, errors.Errorf("No error with name %v found", typeName)
+	return TypeDefinition{}, errors.Errorf("no type with name %v found", typeName)
 }
 
 // AddDefinition adds a Definition to the PackageDefinition
