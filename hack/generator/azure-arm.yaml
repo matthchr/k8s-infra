@@ -128,6 +128,21 @@ exportFilters:
     version: v*api20200501
     name: PublicIPAddresses
     because: "including public IP Address"
+  - action: include-transitive
+    group: microsoft.compute
+    version: v*api20190701  # TODO: This is not actually the latest version of the scale set API I don't think? Are newer versions in newer JSON documents?
+    name: VirtualMachineScaleSet
+    because: "including Virtual machine scale set"
+  - action: include-transitive
+    group: microsoft.network
+    version: v*api20200501
+    name: VirtualNetwork
+    because: "including virtual network"
+  - action: include-transitive
+    group: microsoft.network
+    version: v*api20200501
+    name: VirtualNetworksSubnet
+    because: "including subnet"
   # Exclude everything else as we are operating on an opt-in basis at the moment:
   - action: exclude
     because: We don't want to generate anything else, at the moment.

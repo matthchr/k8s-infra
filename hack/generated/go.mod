@@ -17,6 +17,7 @@ require (
 	github.com/leanovate/gopter v0.2.8
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
+	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975 // indirect
 	k8s.io/api v0.18.6
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
