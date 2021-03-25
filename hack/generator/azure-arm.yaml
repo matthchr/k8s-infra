@@ -129,6 +129,11 @@ exportFilters:
     name: PublicIPAddresses
     because: "including public IP Address"
   - action: include-transitive
+    group: microsoft.network
+    version: v*api20200501
+    name: LoadBalancer
+    because: "including load balancer"
+  - action: include-transitive
     group: microsoft.compute
     version: v*api20190701  # TODO: This is not actually the latest version of the scale set API I don't think? Are newer versions in newer JSON documents?
     name: VirtualMachineScaleSet

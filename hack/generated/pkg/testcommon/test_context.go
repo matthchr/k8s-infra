@@ -7,6 +7,7 @@ package testcommon
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -39,6 +40,7 @@ type PerTestContext struct {
 	T                   *testing.T
 	AzureClientRecorder *recorder.Recorder
 	AzureClient         armclient.Applier
+	AzureSubscription   string
 	AzureMatch          *ArmMatcher
 	Namer               ResourceNamer
 	TestName            string
@@ -86,6 +88,7 @@ func (tc TestContext) ForTest(t *testing.T) (PerTestContext, error) {
 		T:                   t,
 		Namer:               tc.NameConfig.NewResourceNamer(t.Name()),
 		AzureClient:         armClient,
+		AzureSubscription:   subscriptionID,
 		AzureMatch:          NewArmMatcher(armClient),
 		AzureClientRecorder: recorder,
 		TestName:            t.Name(),
@@ -194,4 +197,14 @@ func (tc PerTestContext) NewTestResourceGroup() *resources.ResourceGroup {
 			Tags:     CreateTestResourceGroupDefaultTags(),
 		},
 	}
+}
+
+func (tc PerTestContext) MakeARMId(resourceGroup string, provider string, params ...string) string {
+	if len(params)%2 != 0 {
+		panic("ARM Id params must come in resourceKind/name pairs")
+	}
+
+	suffix := strings.Join(params, "/")
+
+	return fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/%s/%s", tc.AzureSubscription, resourceGroup, provider, suffix)
 }
