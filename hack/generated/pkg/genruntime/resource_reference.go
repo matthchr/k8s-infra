@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // KnownResourceReference is a resource reference to a known type.
@@ -125,4 +126,16 @@ func ValidateResourceReferences(refs map[ResourceReference]struct{}) error {
 	}
 
 	return kerrors.NewAggregate(errs)
+}
+
+// MakeReferenceFromResource takes a Kubernetes object and turns it into a ResourceReference.
+func MakeReferenceFromResource(resource controllerutil.Object) ResourceReference {
+	gvk := resource.GetObjectKind().GroupVersionKind()
+
+	return ResourceReference{
+		Group: gvk.Group,
+		Kind: gvk.Kind,
+		Namespace: resource.GetNamespace(),
+		Name: resource.GetName(),
+	}
 }
