@@ -325,14 +325,14 @@ func (v *ValidatorBuilder) makeLocalValidationFuncDetails(kind ValidationKind, c
 				},
 			},
 		},
-		Body: v.localValidationFuncBody(kind, codeGenerationContext, receiverIdent),
+		Body: v.localValidationFuncBody(kind, codeGenerationContext, receiver),
 	}
 }
 
-func (v *ValidatorBuilder) localValidationFuncBody(kind ValidationKind, codeGenerationContext *CodeGenerationContext, receiverIdent string) []dst.Stmt {
+func (v *ValidatorBuilder) localValidationFuncBody(kind ValidationKind, codeGenerationContext *CodeGenerationContext, receiver TypeName) []dst.Stmt {
 	var elements []dst.Expr
 	for _, validationFunc := range v.validations[kind] {
-		elements = append(elements, astbuilder.Selector(dst.NewIdent(receiverIdent), validationFunc.name))
+		elements = append(elements, v.makeLocalValidationElement(kind, validationFunc, codeGenerationContext, receiver))
 	}
 
 	if len(elements) == 0 {
@@ -347,6 +347,35 @@ func (v *ValidatorBuilder) localValidationFuncBody(kind ValidationKind, codeGene
 	})
 
 	return []dst.Stmt{returnStmt}
+}
+
+func (v *ValidatorBuilder) makeLocalValidationElement(kind ValidationKind, validation *objectFunction, codeGenerationContext *CodeGenerationContext, receiver TypeName) dst.Expr {
+	receiverIdent := v.idFactory.CreateIdentifier(receiver.Name(), NotExported)
+
+	if kind == ValidationKindUpdate {
+		// It's common that updates don't actually need the "old" variable. If the function that we're going to be calling
+		// doesn't take any parameters, provide a wrapper
+		f := validation.asFunc(validation, codeGenerationContext, receiver, validation.name)
+		if f.Type.Params.NumFields() == 0 {
+			return &dst.FuncLit{
+				Decs: dst.FuncLitDecorations{
+					NodeDecs: dst.NodeDecs{
+						//Start:  doc,
+						Before: dst.NewLine,
+						After:  dst.NewLine,
+					},
+				},
+				Type: getValidationFuncType(kind, codeGenerationContext),
+				Body: &dst.BlockStmt{
+					List: []dst.Stmt{
+						astbuilder.Returns(astbuilder.CallQualifiedFunc(receiverIdent, validation.name)),
+					},
+				},
+			}
+		}
+	}
+
+	return astbuilder.Selector(dst.NewIdent(receiverIdent), validation.name)
 }
 
 func getValidationFuncType(kind ValidationKind, codeGenerationContext *CodeGenerationContext) *dst.FuncType {
