@@ -27,3 +27,44 @@ type Function interface {
 	// Equals determines if this Function is equal to another one
 	Equals(f Function) bool
 }
+
+var _ Function = &objectFunction{}
+
+// objectFunction is a simple helper that implements the Function interface. It is intended for use for functions
+// that only need information about the object they are operating on
+type objectFunction struct {
+	name             string
+	o                *ObjectType
+	idFactory        IdentifierFactory
+	asFunc           asFuncType
+	requiredPackages *PackageReferenceSet
+}
+
+type asFuncType func(f *objectFunction, codeGenerationContext *CodeGenerationContext, receiver TypeName, methodName string) *dst.FuncDecl
+
+// Name returns the unique name of this function
+// (You can't have two functions with the same name on the same object or resource)
+func (k *objectFunction) Name() string {
+	return k.name
+}
+
+func (k *objectFunction) RequiredPackageReferences() *PackageReferenceSet {
+	return k.requiredPackages
+}
+
+func (k *objectFunction) References() TypeNameSet {
+	return k.o.References()
+}
+
+func (k *objectFunction) AsFunc(codeGenerationContext *CodeGenerationContext, receiver TypeName) *dst.FuncDecl {
+	return k.asFunc(k, codeGenerationContext, receiver, k.name)
+}
+
+func (k *objectFunction) Equals(f Function) bool {
+	typedF, ok := f.(*objectFunction)
+	if !ok {
+		return false
+	}
+
+	return k.o.Equals(typedF.o)
+}
